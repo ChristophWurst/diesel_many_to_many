@@ -1,7 +1,3 @@
-#![feature(custom_attribute)]
-
-#[macro_use]
-extern crate diesel_codegen;
 #[macro_use]
 extern crate diesel;
 extern crate dotenv;
@@ -44,23 +40,23 @@ fn insert_test_data(conn: &PgConnection) -> (models::Image, models::Image) {
     let new_img1 = NewImage { url: "img1.jpg" };
     let new_img2 = NewImage { url: "img1.jpg" };
 
-    let img1: Image = diesel::insert(&new_img1)
-        .into(images::table)
+    let img1: Image = diesel::insert_into(images::table)
+        .values(&new_img1)
         .get_result(conn)
         .expect("Error savig img1");
-    let img2: Image = diesel::insert(&new_img2)
-        .into(images::table)
+    let img2: Image = diesel::insert_into(images::table)
+        .values(&new_img2)
         .get_result(conn)
         .expect("Error savig img2");
 
     let cat_tag = NewTag { label: "cat" };
     let cute_tag = NewTag { label: "cute" };
-    let tag1: Tag = diesel::insert(&cat_tag)
-        .into(tags::table)
+    let tag1: Tag = diesel::insert_into(tags::table)
+        .values(&cat_tag)
         .get_result(conn)
         .expect("Error saving cat tag");
-    let tag2: Tag = diesel::insert(&cute_tag)
-        .into(tags::table)
+    let tag2: Tag = diesel::insert_into(tags::table)
+        .values(&cute_tag)
         .get_result(conn)
         .expect("Error saving cute tag");
 
@@ -73,12 +69,12 @@ fn insert_test_data(conn: &PgConnection) -> (models::Image, models::Image) {
         image_id: img1.id,
         tag_id: tag2.id,
     };
-    diesel::insert(&img1_tag1)
-        .into(image_tags::table)
+    diesel::insert_into(image_tags::table)
+        .values(&img1_tag1)
         .execute(conn)
         .expect("Error associationg img1 with tag1");
-    diesel::insert(&img1_tag2)
-        .into(image_tags::table)
+    diesel::insert_into(image_tags::table)
+        .values(&img1_tag2)
         .execute(conn)
         .expect("Error associationg img1 with tag2");
 
@@ -111,6 +107,4 @@ pub fn list_tags() {
     for t in result {
         println!("{}: {}", t.id, t.label);
     }
-
-    assert!(false);
 }
