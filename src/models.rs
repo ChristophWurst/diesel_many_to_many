@@ -3,7 +3,6 @@ use super::schema::image_tags;
 use super::schema::tags;
 
 #[derive(Identifiable, Queryable, Associations)]
-#[has_many(image_tags)]
 pub struct Image {
     pub id: i32,
     pub url: String,
@@ -32,7 +31,6 @@ pub struct NewImageTag {
 }
 
 #[derive(Identifiable, Queryable, Associations)]
-#[has_many(image_tags)]
 pub struct Tag {
     pub id: i32,
     pub label: String,
