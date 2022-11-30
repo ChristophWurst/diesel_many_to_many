@@ -20,7 +20,7 @@ pub fn establish_connection() -> PgConnection {
     PgConnection::establish(&database_url).expect(&format!("Error connecting to {}", database_url))
 }
 
-fn reset_db(conn: &PgConnection) {
+fn reset_db(conn: &mut PgConnection) {
     use self::schema::images::dsl::*;
     use self::schema::tags::dsl::*;
     use self::schema::image_tags::dsl::*;
@@ -36,7 +36,7 @@ fn reset_db(conn: &PgConnection) {
         .expect("could not delete images");
 }
 
-fn insert_test_data(conn: &PgConnection) -> (models::Image, models::Image) {
+fn insert_test_data(conn: &mut PgConnection) -> (models::Image, models::Image) {
     let new_img1 = NewImage { url: "img1.jpg" };
     let new_img2 = NewImage { url: "img1.jpg" };
 
@@ -81,28 +81,26 @@ fn insert_test_data(conn: &PgConnection) -> (models::Image, models::Image) {
     (img1, img2)
 }
 
-fn get_tags_for_image(img: &models::Image, conn: &PgConnection) -> Vec<Tag> {
-    use diesel::pg::expression::dsl::any;
-
+fn get_tags_for_image(img: &models::Image, conn: &mut PgConnection) -> Vec<Tag> {
     let image_tag_ids = ImageTag::belonging_to(img).select(image_tags::tag_id);
     tags::table
-        .filter(tags::id.eq(any(image_tag_ids)))
+        .filter(tags::id.eq_any(image_tag_ids))
         .load::<Tag>(conn)
         .expect("could not load tags")
 }
 
 pub fn list_tags() {
-    let conn = establish_connection();
-    reset_db(&conn);
-    let (img1, img2) = insert_test_data(&conn);
+    let conn = &mut establish_connection();
+    reset_db(conn);
+    let (img1, img2) = insert_test_data(conn);
 
-    let result = get_tags_for_image(&img1, &conn);
+    let result = get_tags_for_image(&img1, conn);
     println!("Image 1 has {} tags.", result.len());
     for t in result {
         println!("{}: {}", t.id, t.label);
     }
 
-    let result = get_tags_for_image(&img2, &conn);
+    let result = get_tags_for_image(&img2, conn);
     println!("Image 2 has {} tags.", result.len());
     for t in result {
         println!("{}: {}", t.id, t.label);
